@@ -65,10 +65,17 @@ class Game:
 
         self.check_finished_rows()
         ## PIECE SORTER NEEDED
-        self.tetromino = Tetromino(self.get_next_shape(),
-                                   self.sprites,
-                                   self.create_new_tetromino,
-                                   self.field_data)
+        new_tetromino = Tetromino(self.get_next_shape(), self.sprites, self.create_new_tetromino, self.field_data)
+
+        # Check for overlap at spawn
+        for block in new_tetromino.blocks:
+            x = int(block.pos.x)
+            y = int(block.pos.y)
+            if y >= 0 and self.field_data[y][x]:
+                self.tetromino = new_tetromino
+                return
+
+        self.tetromino = new_tetromino
 
     def timer_update(self):
         for timer in self.timers.values():
@@ -142,7 +149,6 @@ class Game:
                 self.field_data[int(block.pos.y)][int(block.pos.x)] = block
 
             self.calc_score(len(delete_rows))
-
 
     def run(self):
 
