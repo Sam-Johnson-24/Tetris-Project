@@ -1,5 +1,6 @@
 from settings import *
 from sys import exit
+from random import choice
 
 #components
 from game import Game
@@ -15,10 +16,24 @@ class Main:
         pygame.display.set_caption("Tetris")
         self.clock = pygame.time.Clock()
 
+        # shapes
+        ## PIECE SORTER
+        self.next_shapes = [choice(list(TETROMINOS.keys())) for shape in range(3)]
+
         # Components
-        self.game = Game()
+        self.game = Game(self.get_next_shape, self.update_score)
         self.score = Score()
         self.preview = Preview()
+
+    def update_score(self, lines, score, lvl):
+        self.score.lines = lines
+        self.score.score = score
+        self.score.lvl = lvl
+
+    def get_next_shape(self):
+        next_shape = self.next_shapes.pop(0)
+        self.next_shapes.append(choice(list(TETROMINOS.keys())))
+        return next_shape
 
     def run(self):
         while True:
@@ -31,7 +46,7 @@ class Main:
 
             self.game.run()
             self.score.run()
-            self.preview.run()
+            self.preview.run(self.next_shapes)
 
             pygame.display.update()
             self.clock.tick(60)
