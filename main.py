@@ -1,6 +1,6 @@
 from settings import *
 from sys import exit
-from random import choice
+from random import choice, shuffle
 from os.path import join
 import csv
 
@@ -10,7 +10,10 @@ from score import Score
 from preview_pieces import Preview
 
 class Main:
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initializes the main gameloop including core components.
+        """
 
         # General
         pygame.init()
@@ -23,30 +26,75 @@ class Main:
         self.player_name = ''
         self.name_input_active = False
 
+        # Font
         self.font= pygame.font.Font(join('graphics', 'Russo_One.ttf'),40)
-        # shapes
-        ## PIECE SORTER
-        self.next_shapes = [choice(list(TETROMINOS.keys())) for shape in range(3)]
+
+        # Piecebag
+        self.next_shapes = []
+        self.piecebag = []
+        self.piecebag = list(TETROMINOS.keys())
+        shuffle(self.piecebag)
+
 
         # Components
         self.score = Score()
         self.preview = Preview()
         self.init_game()
 
-    def init_game(self):
+    def init_game(self) -> None:
+        """
+        Initializes the Game class instance as well as setting up the piecbag
+        refreshing it if a game has already been played.
+        """
+        self.piecebag = []
+        self.next_shapes = []
+
+        self.refill_piecebag()
+        self.refill_next_shapes()
         self.game = Game(self.get_next_shape, self.update_score)
 
-    def update_score(self, lines, score, lvl):
+    def update_score(self, lines, score, lvl) -> None:
+        """
+        Updates the lines, score and level variables of the game.
+
+        :param lines (int): Number of lines cleared
+        :param score (int): Point total from clearing lines
+        :param lvl (int): relative speed based on cleared lines
+        """
         self.score.lines = lines
         self.score.score = score
         self.score.lvl = lvl
 
-    def get_next_shape(self):
-        next_shape = self.next_shapes.pop(0)
-        self.next_shapes.append(choice(list(TETROMINOS.keys())))
-        return next_shape
+    def refill_piecebag(self) -> None:
+        """
+        Refill the piecebag with a shuffled set of all tetromino types.
+        """
+        self.piecebag = list(TETROMINOS.keys())
+        shuffle(self.piecebag)
 
-    def run(self):
+    def refill_next_shapes(self) -> None:
+        """
+        Ensure there are always 3 shapes in the preview queue.
+        """
+        while len(self.next_shapes) < 3:
+            if not self.piecebag:
+                self.refill_piecebag()
+            self.next_shapes.append(self.piecebag.pop())
+
+    def get_next_shape(self) -> str:
+        """
+        Pop the next shape and refill preview queue.
+        """
+        if not self.next_shapes:
+            self.refill_next_shapes()
+        shape = self.next_shapes.pop(0)
+        self.refill_next_shapes()
+        return shape
+
+    def run(self) -> None:
+        """
+        Controls screen selection and gamestate.
+        """
         self.running = True
         while self.running:
             self.display_surface.fill('Gray')
@@ -65,7 +113,10 @@ class Main:
             pygame.display.update()
             self.clock.tick(60)
 
-    def run_menu(self):
+    def run_menu(self) -> None:
+        """
+        Main menuloop.
+        """
         self.draw_text("TETRIS", y=100)
         self.draw_text("Press ENTER to Start", y=200)
         self.draw_text("Press H for High Scores", y=260)
@@ -81,7 +132,10 @@ class Main:
                 elif event.key == pygame.K_h:
                     self.state = 'high_scores'
 
-    def run_enter_name(self):
+    def run_enter_name(self) -> None:
+        """
+        mainloop for starting a game; takes in player name.
+        """
         self.draw_text('Enter Your Name:', y=100)
         self.draw_text(self.player_name + "|", y=160)
 
@@ -98,7 +152,10 @@ class Main:
                     if len(self.player_name) < 12 and event.unicode.isprintable():
                         self.player_name += event.unicode
 
-    def run_game(self):
+    def run_game(self) -> None:
+        """
+        mainloop for running game.
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -112,7 +169,10 @@ class Main:
             self.save_score([self.player_name, self.score.score, self.score.lvl, self.score.lines])
             self.state = 'game_over'
 
-    def run_game_over(self):
+    def run_game_over(self) -> None:
+        """
+        Mainloop for game over state.
+        """
         self.draw_text('Game Over', y=150)
         self.draw_text("Press M for Menu", y=220)
         for event in pygame.event.get():
@@ -122,7 +182,10 @@ class Main:
                 if event.key == pygame.K_m:
                     self.state = 'menu'
 
-    def run_high_scores(self):
+    def run_high_scores(self) -> None:
+        """
+        Mainloop for scoreboard
+        """
         self.draw_text("High Scores", y=50)
         self.draw_text('M for menu', y=WINDOW_HEIGHT - 60)
 
@@ -147,7 +210,9 @@ class Main:
 
                     # Score text
                     score_text = f"{i + 1}. {row[0]} | Score: {row[1]} | Level: {row[2]} | Lines: {row[3]}"
-                    self.draw_text(score_text, y=y)
+                    font = pygame.font.Font(join('graphics', 'Russo_One.ttf'),20)
+                    self.draw_text(score_text, font=font, y=y)
+
         except FileNotFoundError:
             self.draw_text("No scores yet.", y=120)
 
@@ -158,18 +223,38 @@ class Main:
                 if event.key == pygame.K_m:
                     self.state = 'menu'
 
-    def draw_text(self, text, x=None, y=0):
-        text_surf = self.font.render(text, True, 'White')
+    def draw_text(self, text: str, x: int = None, y: int = 0, font: pygame.font.Font = None) -> None:
+        """
+        Draws the text on the screen at the specified position.
+
+        :param text (str): The text to be displayed.
+        :param x (int, optional): The x-coordinate for the text position. Defaults to center.
+        :param y (int, optional): The y-coordinate for the text position.
+        :param font (pygame.font.Font, optional): The font to be used for rendering the text. Defaults to None.
+        """
+        if font is None:  # If no custom font is provided, use the default font
+            font = self.font
+
+        text_surf = font.render(text, True, 'White')
         rect = text_surf.get_rect(center=(WINDOW_WIDTH // 2 if x is None else x, y))
         self.display_surface.blit(text_surf, rect)
 
-    def save_score(self, score_data):
+    def save_score(self, score_data: tuple) -> None:
+        """
+        Sends post game data to scoreboard CSV
+        """
+        file_exists = os.path.exists('scoreboard.csv')
+        write_header = not file_exists or os.path.getsize('scoreboard.csv') == 0
         with open('scoreboard.csv', 'a') as file:
             writer = csv.writer(file)
+            if write_header:
+                writer.writerow(['NAME', 'SCORE', 'LEVEL', 'LINES'])
             writer.writerow(score_data)
 
-    def game_over(self):
-        # If the new tetromino starts overlapping existing blocks, it's game over
+    def game_over(self) -> bool:
+        """
+        Checks for Game over condition
+        """
         for block in self.game.tetromino.blocks:
             x = int(block.pos.x)
             y = int(block.pos.y)
@@ -181,5 +266,3 @@ class Main:
 if __name__ == "__main__":
     main = Main()
     main.run()
-
-    main.save_score()

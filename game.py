@@ -6,7 +6,10 @@ from timer import Timer
 
 
 class Game:
-    def __init__(self, get_next_shape, update_score):
+    def __init__(self, get_next_shape, update_score) -> None:
+        """
+        Initializes class variables and board-state
+        """
 
         # General Settings
         self.surface = pygame.Surface((GAME_WIDTH,GAME_HEIGHT))
@@ -49,7 +52,12 @@ class Game:
         self.current_score = 0
         self.current_lines = 0
 
-    def calc_score(self, num_lines):
+    def calc_score(self, num_lines) -> None:
+        """
+        Updates score variables when lines are cleared
+
+        :param num_lines (int): number of lines to use for updates
+        """
         self.current_lines += num_lines
         self.current_score += SCORE_DATA[num_lines] * self.current_lvl
 
@@ -61,10 +69,12 @@ class Game:
 
         self.update_score(self.current_lines, self.current_score, self.current_lvl)
 
-    def create_new_tetromino(self):
+    def create_new_tetromino(self) -> None:
+        """
+        Creates new instance of tetromino and changes player control to it
+        """
 
         self.check_finished_rows()
-        ## PIECE SORTER NEEDED
         new_tetromino = Tetromino(self.get_next_shape(), self.sprites, self.create_new_tetromino, self.field_data)
 
         # Check for overlap at spawn
@@ -77,14 +87,21 @@ class Game:
 
         self.tetromino = new_tetromino
 
-    def timer_update(self):
+    def timer_update(self) -> None:
+        """
+        Global timer updates
+        """
         for timer in self.timers.values():
             timer.update()
 
-    def move_down(self):
+    def move_down(self) -> None:
+        """
+        Moves player tetromino down
+        """
         self.tetromino.move_down()
 
-    def draw_grid(self):
+    def draw_grid(self) -> None:
+        """Draws Game board"""
 
         for col in range(1, COLUMNS):
             x = col * CELL_SIZE
@@ -96,7 +113,10 @@ class Game:
 
         self.surface.blit(self.line_surface, (0,0))
 
-    def input(self):
+    def input(self) -> None:
+        """
+        Handles player input on arrow keys
+        """
         keys = pygame.key.get_pressed()
 
         if not self.timers['horizontal move'].active:
@@ -123,7 +143,10 @@ class Game:
             self.down_pressed = False
             self.timers['vertical move'].duration = self.down_speed
 
-    def check_finished_rows(self):
+    def check_finished_rows(self) -> None:
+        """
+        Handles deletion of completed rows and related board updates
+        """
 
         # get full row indexs
         delete_rows = []
@@ -150,7 +173,10 @@ class Game:
 
             self.calc_score(len(delete_rows))
 
-    def run(self):
+    def run(self) -> None:
+        """
+        Runs Game mainloop
+        """
 
         # update
         self.input()
