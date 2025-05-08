@@ -1,7 +1,7 @@
 from settings import *
 from sys import exit
 from random import choice, shuffle
-from os.path import join
+import os
 import csv
 
 #components
@@ -27,7 +27,7 @@ class Main:
         self.name_input_active = False
 
         # Font
-        self.font= pygame.font.Font(join('graphics', 'Russo_One.ttf'),40)
+        self.font= pygame.font.Font(os.path.join('graphics', 'Russo_One.ttf'),40)
 
         # Piecebag
         self.next_shapes = []
@@ -210,7 +210,7 @@ class Main:
 
                     # Score text
                     score_text = f"{i + 1}. {row[0]} | Score: {row[1]} | Level: {row[2]} | Lines: {row[3]}"
-                    font = pygame.font.Font(join('graphics', 'Russo_One.ttf'),20)
+                    font = pygame.font.Font(os.path.join('graphics', 'Russo_One.ttf'),20)
                     self.draw_text(score_text, font=font, y=y)
 
         except FileNotFoundError:

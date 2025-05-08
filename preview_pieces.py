@@ -4,8 +4,10 @@ from pygame.image import load
 from os import path
 
 class Preview:
-    def __init__(self):
-
+    def __init__(self) -> None:
+        """
+        Initializes Piece preview
+        """
         # general
         self.surface = pygame.Surface((SIDE_BAR_WIDTH, (GAME_HEIGHT * PREVIEW_HEIGHT_FRACTION) - PADDING))
         self.display_surface = pygame.display.get_surface()
@@ -17,7 +19,11 @@ class Preview:
         #image pos data
         self.increment_height = self.surface.get_height() / 3
 
-    def display_pieces(self, shapes):
+    def display_pieces(self, shapes: list) -> None:
+        """
+        Renders the next pieces' sprites on the preview screen
+        :param shapes: list of next pieces by letter name
+        """
         for i, shape in enumerate(shapes):
             shape_surface = self.shape_surfaces[shape]
             x = self.surface.get_width() / 2
@@ -25,8 +31,11 @@ class Preview:
             rect = shape_surface.get_rect(center= (x,y))
             self.surface.blit(shape_surface, rect)
 
-    def run(self, next_shapes):
-
+    def run(self, next_shapes: list) -> None:
+        """
+        Updates and displays next pieces on display
+        :param next_shapes: list of next pieces by letter name
+        """
         self.surface.fill('Gray')
         self.display_pieces(next_shapes)
         self.display_surface.blit(self.surface, self.rect)

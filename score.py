@@ -3,13 +3,16 @@ from settings import *
 from os.path import join
 
 class Score:
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initializes the score display
+        """
         self.surface = pygame.Surface((SIDE_BAR_WIDTH, (GAME_HEIGHT * SCORE_HEIGHT_FRACTION) - PADDING))
         self.display_surface = pygame.display.get_surface()
         self.rect = self.surface.get_rect(bottomright = (WINDOW_WIDTH - PADDING, WINDOW_HEIGHT - PADDING))
 
         #font
-        self.font = pygame.font.Font(join('graphics', 'Russo_One.ttf'),50)
+        self.font = pygame.font.Font(join('graphics', 'Russo_One.ttf'),20)
 
         #display
         self.increment_height = self.surface.get_height() / 3
@@ -19,12 +22,20 @@ class Score:
         self.lvl = 1
         self.lines = 0
 
-    def display_text(self, pos, text):
+    def display_text(self, pos: tuple, text: str) -> None:
+        """
+        Places display on screen
+        :param pos: on screen coords
+        :param text: text to display
+        """
         text_surface = self.font.render(f'{text[0]}:{text[1]}', True, 'White')
         text_rect = text_surface.get_rect(center= pos)
         self.surface.blit(text_surface, text_rect)
 
-    def run(self):
+    def run(self) -> None:
+        """
+        Runs update loop for score display
+        """
         self.surface.fill('Gray')
         for i, text in enumerate([('Score', self.score), ('Level', self.lvl), ('Lines', self.lines)]):
             x = self.surface.get_width() / 2
