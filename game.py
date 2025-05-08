@@ -1,4 +1,5 @@
 from pydoc import browse
+from symtable import Class
 
 from settings import *
 from random import choice
@@ -6,7 +7,10 @@ from timer import Timer
 
 
 class Game:
-    def __init__(self, get_next_shape, update_score):
+    def __init__(self, get_next_shape, update_score) -> None:
+        """
+        Initializes class variables and board-state
+        """
 
         # General Settings
         self.surface = pygame.Surface((GAME_WIDTH,GAME_HEIGHT))
@@ -49,7 +53,12 @@ class Game:
         self.current_score = 0
         self.current_lines = 0
 
-    def calc_score(self, num_lines):
+    def calc_score(self, num_lines) -> None:
+        """
+        Updates score variables when lines are cleared
+
+        :param num_lines (int): number of lines to use for updates
+        """
         self.current_lines += num_lines
         self.current_score += SCORE_DATA[num_lines] * self.current_lvl
 
@@ -61,10 +70,12 @@ class Game:
 
         self.update_score(self.current_lines, self.current_score, self.current_lvl)
 
-    def create_new_tetromino(self):
+    def create_new_tetromino(self) -> None:
+        """
+        Creates new instance of tetromino and changes player control to it
+        """
 
         self.check_finished_rows()
-        ## PIECE SORTER NEEDED
         new_tetromino = Tetromino(self.get_next_shape(), self.sprites, self.create_new_tetromino, self.field_data)
 
         # Check for overlap at spawn
@@ -77,14 +88,21 @@ class Game:
 
         self.tetromino = new_tetromino
 
-    def timer_update(self):
+    def timer_update(self) -> None:
+        """
+        Global timer updates
+        """
         for timer in self.timers.values():
             timer.update()
 
-    def move_down(self):
+    def move_down(self) -> None:
+        """
+        Moves player tetromino down
+        """
         self.tetromino.move_down()
 
-    def draw_grid(self):
+    def draw_grid(self) -> None:
+        """Draws Game board"""
 
         for col in range(1, COLUMNS):
             x = col * CELL_SIZE
@@ -96,7 +114,10 @@ class Game:
 
         self.surface.blit(self.line_surface, (0,0))
 
-    def input(self):
+    def input(self) -> None:
+        """
+        Handles player input on arrow keys
+        """
         keys = pygame.key.get_pressed()
 
         if not self.timers['horizontal move'].active:
@@ -123,7 +144,10 @@ class Game:
             self.down_pressed = False
             self.timers['vertical move'].duration = self.down_speed
 
-    def check_finished_rows(self):
+    def check_finished_rows(self) -> None:
+        """
+        Handles deletion of completed rows and related board updates
+        """
 
         # get full row indexs
         delete_rows = []
@@ -150,7 +174,10 @@ class Game:
 
             self.calc_score(len(delete_rows))
 
-    def run(self):
+    def run(self) -> None:
+        """
+        Runs Game mainloop
+        """
 
         # update
         self.input()
@@ -165,8 +192,15 @@ class Game:
         pygame.draw.rect(self.display_surface, 'White', self.rect, 2, 2)
 
 class Tetromino:
-    def __init__(self, shape, group, create_new_tetromino, field_data):
+    def __init__(self, shape: str, group: any, create_new_tetromino: callable, field_data: list) -> None:
+        """
+        Initializes a new tetromino
 
+        :param shape: The shape of the tetromino
+        :param group: Container for the individual blocks
+        :param create_new_tetromino: Callback function to create a new tetromino
+        :param field_data: Current board state for checking collision
+        """
         # Setup
         self.shape = shape
         self.block_positions = TETROMINOS[shape]['shape']
@@ -178,22 +212,40 @@ class Tetromino:
         self.blocks = [Block(group, pos, self.color) for pos in self.block_positions]
 
     # Collisions
-    def next_move_horizontal_collide(self, blocks, amount):
+    def next_move_horizontal_collide(self, blocks: list, amount: int) -> bool:
+        """
+        Collects the location of each block in active tetromino for checking horizontal collision
+        :param blocks: list of tuples containing coordinates of each block
+        :param amount: direction of movement
+        :return: returns True if collision occurs otherwise returns true
+        """
         collision_list = [block.horizontal_collide(int(block.pos.x) + amount, self.field_data) for block in self.blocks]
         return True if any(collision_list) else False
 
-    def next_move_vertical_collide(self, blocks, amount):
+    def next_move_vertical_collide(self, blocks, amount) -> bool:
+        """
+        Collects the location of each block in active tetromino for checking vertical collision
+        :param blocks: list of tuples containing coordinates of each block
+        :param amount: direction of movement
+        :return: returns True if collision occurs otherwise returns true
+        """
         collision_list = [block.vertical_collide(int(block.pos.y) + amount, self.field_data) for block in self.blocks]
         return True if any(collision_list) else False
 
-
     # Movement
-    def move_horizontal(self, amount):
+    def move_horizontal(self, amount) -> None:
+        """
+        Moves the active tetromino left or right
+        :param amount: direction of move
+        """
         if not self.next_move_horizontal_collide(self.blocks, amount):
             for block in self.blocks:
                 block.pos.x += amount
 
-    def move_down(self):
+    def move_down(self) -> None:
+        """
+        Moves the active tetromino down or makes a new one if unable to
+        """
         if not self.next_move_vertical_collide(self.blocks, 1):
             for block in self.blocks:
                 block.pos.y += 1
@@ -202,7 +254,10 @@ class Tetromino:
                 self.field_data[int(block.pos.y)][int(block.pos.x)] = block
             self.create_new_tetromino()
 
-    def rotate(self):
+    def rotate(self) -> None:
+        """
+        Spins the active tetromino in place 90 degrees clockwise, excepting "O" blocks
+        """
         if self.shape != 'O':
             pivot_pos = self.blocks[0].pos
             new_block_positions = [block.rotate(pivot_pos) for block in self.blocks]
@@ -223,7 +278,13 @@ class Tetromino:
                 block.pos = new_block_positions[i]
 
 class Block(pygame.sprite.Sprite):
-    def __init__(self, group, pos, color):
+    def __init__(self, group: any, pos: tuple, color: str) -> None:
+        """
+        Initializes a new block
+        :param group: Group location for the block
+        :param pos: tuple containing the coords for the block
+        :param color: string containing the color id from the settings file
+        """
 
         # General
         super().__init__(group)
@@ -234,22 +295,40 @@ class Block(pygame.sprite.Sprite):
         self.pos = pygame.Vector2(pos) + BLOCK_OFFSET
         self.rect = self.image.get_rect(topleft = self.pos * CELL_SIZE)
 
-    def rotate(self, pivot_pos):
+    def rotate(self, pivot_pos: tuple) -> tuple:
+        """
+        Takes the location of a block and moves it to the new position after applying a rotation
+        :param pivot_pos: tuple of the current location
+        :return: tuple of the rotated position
+        """
         return pivot_pos + (self.pos - pivot_pos).rotate(90)
 
-    def horizontal_collide(self, x, field_data):
+    def horizontal_collide(self, x, field_data) -> bool:
+        """
+        returns True if the block would collide with the board edge or the side of another block
+        :param x: x coord on the game board
+        :param field_data: current boardstate of the whole field
+        :return: True if collision occurs, otherwise returns nothing
+        """
         if not 0 <= x < COLUMNS:
             return True
 
         if field_data[int(self.pos.y)][x]:
             return True
 
-    def vertical_collide(self, y, field_data):
+    def vertical_collide(self, y, field_data) -> bool:
+        """
+        returns True if block would collide with the bottom of the board or the top of another block
+        :param y: y-coord of the block
+        :param field_data: current boardstate
+        :return: True if collision occurs, otherwise returns nothing
+        """
         if not y < ROWS:
             return True
 
         if y >= 0 and field_data[y][int(self.pos.x)]:
             return True
 
-    def update(self):
+    def update(self) -> None:
+        """Changes current cell sprite position to new one """
         self.rect.topleft =self.pos * CELL_SIZE
